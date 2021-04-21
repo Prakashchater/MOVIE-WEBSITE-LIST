@@ -11,11 +11,6 @@ MOVIE_FIND_SEARCH_URL = "https://api.themoviedb.org/3/movie"
 GET_MOVIE_URl = "https://api.themoviedb.org/3/movie/"
 MOVIE_DB_IMAGE_URL = "https://image.tmdb.org/t/p/w500"
 
-# response = requests.get(url="https://api.themoviedb.org/3/search/movie?api_key=3eba189493401856ded4c3b309b3868c&language=en-US&query=1&include_adult=default")
-# response.raise_for_status()
-# data = response.json()
-# print(data)
-
 
 app = Flask(__name__)
 Bootstrap(app)
@@ -23,7 +18,7 @@ app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
 
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///movies-collection.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///YOUR DATABASENAME.db'
 db = SQLAlchemy(app)
 
 class Movies(db.Model):

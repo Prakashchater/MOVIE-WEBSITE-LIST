@@ -6,7 +6,7 @@ from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
 import requests
 
-MOVIE_API_KEY = "3eba189493401856ded4c3b309b3868c"
+MOVIE_API_KEY = "YOUR API KEY"
 MOVIE_FIND_SEARCH_URL = "https://api.themoviedb.org/3/movie"
 GET_MOVIE_URl = "https://api.themoviedb.org/3/movie/"
 MOVIE_DB_IMAGE_URL = "https://image.tmdb.org/t/p/w500"

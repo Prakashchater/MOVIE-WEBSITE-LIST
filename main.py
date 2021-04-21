@@ -6,8 +6,8 @@ from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
 import requests
 
-
-# MOVIE_DB_SEARCH_URL = "https://api.themoviedb.org/3/search/movie"
+MOVIE_API_KEY = "3eba189493401856ded4c3b309b3868c"
+MOVIE_FIND_SEARCH_URL = "https://api.themoviedb.org/3/movie"
 GET_MOVIE_URl = "https://api.themoviedb.org/3/movie/"
 MOVIE_DB_IMAGE_URL = "https://image.tmdb.org/t/p/w500"
 
@@ -19,11 +19,11 @@ MOVIE_DB_IMAGE_URL = "https://image.tmdb.org/t/p/w500"
 
 app = Flask(__name__)
 Bootstrap(app)
-app.config['SECRET_KEY'] = 'QWERTYUIOP'
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///movie-collections.db'
 
+
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///movies-collection.db'
 db = SQLAlchemy(app)
 
 class Movies(db.Model):
@@ -38,14 +38,15 @@ class Movies(db.Model):
 
 db.create_all()
 
-class movieForm(FlaskForm):
-    rating = StringField(label='Your Rating out of 10 e.g.7.5')
-    review = StringField(label='Your Review')
-    submit = SubmitField()
-
 class findMovieForm(FlaskForm):
     title = StringField(label='Movie Title', validators=[DataRequired()])
     submit = SubmitField(label='Add Movie')
+
+
+class editMovie(FlaskForm):
+    rating = StringField(label='Your Rating out of 10 e.g.7.5')
+    review = StringField(label='Your Review')
+    submit = SubmitField(label='Done')
 
 # new_movie = Movies(
 #     title="Phone Booth",
@@ -62,14 +63,17 @@ class findMovieForm(FlaskForm):
 
 @app.route("/")
 def home():
-    all_movies = Movies.query.all()
+    all_movies = Movies.query.order_by(Movies.rating).all()
+    for i in range(len(all_movies)):
+        all_movies[i].ranking = len(all_movies) - i
+    db.session.commit()
     return render_template("index.html", movies=all_movies)
 
 
 @app.route('/edit', methods=["GET", "POST"])
 def edit():
     ##UPDATING THE DATABASE-------
-    form = movieForm()
+    form = editMovie()
     movie_id = request.args.get('id')
     movie = Movies.query.get(movie_id)
     if form.validate_on_submit():
@@ -82,7 +86,7 @@ def edit():
 
 @app.route('/delete')
 def delete():
-    movie_id = Movies.args.get('id')
+    movie_id = request.args.get('id')
     movie_to_delete = Movies.query.get(movie_id)
     db.session.delete(movie_to_delete)
     db.session.commit()
@@ -100,35 +104,16 @@ def add():
         return render_template("select.html", options=data)
     return render_template("add.html", form=form)
 
-# @app.route('/find')
-# def find_movie():
-#     movie_api_id = request.args.get('id')
-#     if movie_api_id:
-#         movie_api_url = f"{GET_MOVIE_URl}/{movie_api_id}"
-#         response = requests.get(movie_api_url, params={"api_key": "3eba189493401856ded4c3b309b3868c",
-#                                                        "language": "en-US",
-#                                                        "append_to_response": "images"})
-#         data = response.json()
-#         new_movie = Movies(
-#             title=data["title"],
-#             year=data["release_date"].split("-")[0],
-#             img_url=f"{MOVIE_DB_IMAGE_URL}{data['poster_path']}",
-#             description=data["overview"]
-#         )
-#         db.session.add(new_movie)
-#         db.session.commit()
-#         return redirect(url_for('home'))
-
 
 @app.route("/find")
 def find_movie():
-    movie_api_id = request.args.get("id")
+    movie_api_id = request.args.get('id')
+    # print(movie_api_id)
     if movie_api_id:
-        # movie_api_url = f"{GET_MOVIE_URl}/{movie_api_id}"
-        #The language parameter is optional, if you were making the website for a different audience
-        #e.g. Hindi speakers then you might choose "hi-IN"
-        response = requests.get(url=f"https://api.themoviedb.org/3/movie/{movie_api_id}?api_key=3eba189493401856ded4c3b309b3868c&language=en-US&append_to_response=images")
+        movie_api_url = f"https://api.themoviedb.org/3/movie/{movie_api_id}"
+        response = requests.get(movie_api_url, params={"api_key": MOVIE_API_KEY})
         data = response.json()
+        # print(data)
         new_movie = Movies(
             title=data["title"],
             #The data in release_date includes month and day, we will want to get rid of.
@@ -138,7 +123,8 @@ def find_movie():
         )
         db.session.add(new_movie)
         db.session.commit()
-        return redirect(url_for("home"))
+        return redirect(url_for("edit", id=new_movie.id))
+
 
 
 if __name__ == '__main__':
